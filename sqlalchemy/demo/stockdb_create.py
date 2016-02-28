@@ -1,8 +1,10 @@
+import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 from stockdb_declaration import User, Portfolio, Stock, StockHolding
 from sautils import get_or_create
+from pdutils import currency_column_to_number
 
 echo = True
 engine = create_engine('postgresql+psycopg2://zhiqiang@localhost/stockdb', echo=echo)
@@ -18,17 +20,24 @@ def add_users():
     user3.display_name = 'Zach3'
 
 
+def add_stocks():
+    with open('data/list.txt', 'r') as f:
+        for symbol in f:
+            get_or_create(session, Stock, symbol=symbol)
 
-def add_user(email, password, display_name='', first_name='', last_name=''):
-    try:
-        user = session.query(User).filter(User.email == email, User.password == password).one()
-    except NoResultFound:
-        user = User(
-                email=email, password=password,
-                display_name=display_name, first_name=first_name, last_name=last_name
-        )
-        session.add(user)
-    return user
+
+def add_stock_holdings():
+    user = get_or_create(session, User, email='zach@test.com')[0]
+    portfolio = get_or_create(session, Portfolio, user=user, name='My First Portfolio')[0]
+    df = pd.read_csv('data/activity_until_20160222.csv', index_col=0, parse_dates=True, usecols=range(8))
+    currency_column_to_number(df, 'Price')
+    for row in df.iterrows():
+        data = row[1]
+        stock = get_or_create(session, Stock, symbol=data['Symbol'])[0]
+        get_or_create(session, StockHolding,
+                      shares=data['Quantity'], price=data['Price'], date=data['Date'],
+                      portfolio=portfolio, stock=stock
+                      )
 
 
 def add_portfolios():
@@ -41,15 +50,13 @@ def add_portfolios():
     get_or_create(session, Portfolio, user=user2, name='Zach2 Third Portfolio')
 
 
-def add_stock():
-    pass
-
-
-def add_stock_holding():
-    pass
+def add_demo_data():
+    add_users()
+    add_portfolios()
+    add_stocks()
+    add_stock_holdings()
 
 
 if __name__ == '__main__':
-    add_users()
-    add_portfolios()
+    add_demo_data()
     session.commit()

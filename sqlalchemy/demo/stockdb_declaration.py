@@ -68,8 +68,9 @@ class Portfolio(Base):
 class StockHolding(Base):
     __tablename__ = 'stock_holding'
 
-    stock_id = Column(String, ForeignKey('stock.symbol'), primary_key=True)
-    portfolio_id = Column(Integer, ForeignKey('portfolio.id'), primary_key=True)
+    id = Column(Integer, primary_key=True)
+    stock_id = Column(String, ForeignKey('stock.symbol'))
+    portfolio_id = Column(Integer, ForeignKey('portfolio.id'))
     shares = Column(Numeric(12, 3), nullable=False)
     price = Column(Numeric(10, 4), nullable=False)
     date = Column(Date(), nullable=False)
