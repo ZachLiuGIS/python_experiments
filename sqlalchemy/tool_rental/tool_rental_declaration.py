@@ -96,7 +96,7 @@ class Tool(Base):
 class Accessory(Base):
     __tablename__ = 'accessory'
 
-    accessory = Column(String(50), nullable=False)
+    accessory = Column(String(50), primary_key=True, nullable=False)
     tool_number = Column(Integer, ForeignKey('tool.tool_number'))
 
     tool = relationship("Tool", back_populates="accessories")
@@ -119,3 +119,7 @@ class ServiceRequest(Base):
 
     def __repr__(self):
         return "<ServiceRequest: {} - {}>".format(self.tool_number, self.service_order_number)
+
+
+if __name__ == '__main__':
+    Base.metadata.create_all(engine)
